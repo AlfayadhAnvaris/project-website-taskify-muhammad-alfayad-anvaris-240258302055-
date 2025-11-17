@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+[x-cloak] { display: none !important; }
+
+/* Scrollbar */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(203 213 225) transparent;
+}
+.scrollbar-thin::-webkit-scrollbar { height: 6px; }
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full hover:bg-slate-400;
+}
+
+.task-card {
+  @apply bg-gray-900 border border-gray-700 rounded-xl p-4 transition hover:border-gray-600;
+  cursor: grab;
+}
+
+.task-card:active {
+  cursor: grabbing;
+}
+
+
+/* Kanban styles */
+@layer components {
+  .kanban-column {
+    @apply flex flex-col bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-sm border border-gray-700/50;
+  }
+  .task-card {
+    @apply bg-gray-900 border border-gray-700 rounded-xl p-4 transition cursor-move hover:border-gray-600;
+  }
+}
+
+/* Drag state visuals */
+.sortable-ghost { opacity: 0.4; background-color: #1f2937; border: 1px dashed #3b82f6; }
+.sortable-chosen { opacity: 0.8; transform: scale(1.02); }
+.drag-handle { cursor: grab; }
+.drag-handle:active { cursor: grabbing; }
