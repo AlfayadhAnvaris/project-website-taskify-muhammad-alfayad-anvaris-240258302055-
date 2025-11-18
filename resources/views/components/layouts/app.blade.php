@@ -9,6 +9,8 @@
 @endsection
 
 
+
+
 @section('content')
     {{ $slot }}
 @endsection

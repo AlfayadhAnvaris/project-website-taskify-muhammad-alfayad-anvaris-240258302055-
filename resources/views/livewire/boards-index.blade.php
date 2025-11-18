@@ -1,5 +1,5 @@
 {{-- Main Content --}}
-<div class="main-content flex-1 p-6 ml-64 min-h-screen bg-gray-900 text-white pt-20">
+<div class="main-content flex-1 p-6 ml-64 min-h-screen bg-gray-900 text-white pt-10">
     <div class="max-w-7xl mx-auto">
         {{-- Header Section --}}
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
@@ -24,7 +24,6 @@
                 <button 
                     type="submit" 
                     class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3 rounded-lg font-semibold hover:from-blue-500 hover:to-blue-600 transition-all duration-200 shadow-lg hover:shadow-blue-500/25 flex items-center justify-center gap-2"
-                    {{-- Disable button jika input kosong --}}
                     {{ empty(trim($newBoardName)) ? 'disabled' : '' }}
                 >
                     <i class="fas fa-plus"></i>
@@ -55,17 +54,7 @@
                             </div>
                         </div>
 
-                        {{-- Board Metadata --}}
-                        <div class="flex items-center text-gray-400 text-sm mb-4">
-                            <span class="flex items-center gap-1">
-                                <i class="fas fa-calendar text-xs"></i>
-
-                            </span>
-                            {{-- Tambahkan info lain seperti jumlah tasks jika ada --}}
-                            {{-- <span class="mx-2">•</span>
-                            <span>5 tasks</span> --}}
-                        </div>
-
+                      
                         {{-- Action Buttons --}}
                         <div class="flex justify-between items-center pt-4 border-t border-gray-700">
                             <a 
@@ -75,11 +64,6 @@
                                 Open Board
                                 <i class="fas fa-arrow-right text-xs group-hover:translate-x-1 transition-transform duration-200"></i>
                             </a>
-                            
-                            {{-- Additional actions bisa ditambahkan di sini --}}
-                            <button class="text-gray-400 hover:text-gray-300 transition-colors duration-200">
-                                <i class="fas fa-ellipsis-h"></i>
-                            </button>
                         </div>
                     </div>
                 @endforeach
@@ -103,7 +87,5 @@
                 </div>
             </div>
         @endif
-
-     
     </div>
 </div>

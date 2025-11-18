@@ -2,8 +2,10 @@
 
 namespace App\Livewire;
 
+use App\Models\Board;
 use Livewire\Component;
 use App\Models\Column;
+use App\Models\Task;
 
 class TaskList extends Component
 {
@@ -18,4 +20,10 @@ class TaskList extends Component
     {
         return view('livewire.task-list');
     }
+
+    public function show(Board $board, Task $task)
+{
+    return view('user.tasks.show', compact('board', 'task'));
+}
+
 }

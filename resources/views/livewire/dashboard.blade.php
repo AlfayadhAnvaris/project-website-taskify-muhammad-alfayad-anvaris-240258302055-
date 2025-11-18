@@ -38,130 +38,144 @@
             </div>
         </div>
     </div>
-
-    <!-- Kanban Board -->
-    <div class="flex gap-4 overflow-x-auto pb-6 kanban-board">
-        @foreach($columns as $column)
-            <div class="flex-shrink-0 w-72 kanban-column">
-                <div class="flex flex-col h-full bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-2xl shadow-lg hover:shadow-2xl transition duration-300">
-
-                    <!-- Header -->
-                    <div class="border-b border-gray-700 px-4 pt-4 pb-3 flex justify-between items-center">
-                        <div class="flex items-center gap-2">
-                            <div class="w-2.5 h-2.5 rounded-full @if($loop->index % 3 === 0) bg-purple-500 @elseif($loop->index %3 ===1) bg-blue-500 @else bg-green-500 @endif"></div>
-                            <h2 class="text-base font-semibold text-white">{{ $column->name }}</h2>
+ {{-- Kanban Board --}}
+    <div class="flex gap-4 pb-6 kanban-board overflow-x-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-800" 
+         id="kanban-board">
+        @foreach ($columns as $column)
+            <div class="flex-shrink-0 w-80 kanban-column group">
+                <div class="flex flex-col h-full bg-gray-800 border border-gray-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:border-gray-600">
+                    
+                    {{-- Column Header --}}
+                    <div class="border-b border-gray-700 px-4 py-4 flex justify-between items-center bg-gray-800/50 rounded-t-xl">
+                        <div class="flex items-center gap-3 flex-1 min-w-0">
+                            <div class="w-3 h-3 rounded-full flex-shrink-0
+                                @switch($loop->index % 4)
+                                    @case(0) bg-blue-500 @break
+                                    @case(1) bg-purple-500 @break
+                                    @case(2) bg-green-500 @break
+                                    @case(3) bg-orange-500 @break
+                                @endswitch">
+                            </div>
+                            <h2 class="text-lg font-semibold text-white truncate" title="{{ $column->name }}">
+                                {{ $column->name }}
+                            </h2>
                         </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="text-xs text-gray-400 bg-gray-700 px-2 py-0.5 rounded-full">{{ $column->tasks->count() }} Tasks</span>
-                            <button wire:click="deleteColumn({{ $column->id }})" class="text-red-500 hover:text-red-400 text-sm px-1 rounded">
-                                <i class="fas fa-trash"></i>
+
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <span class="text-xs font-medium text-gray-300 bg-gray-700 px-2 py-1 rounded-full min-w-[2rem] text-center">
+                                {{ $column->tasks->count() }}
+                            </span>
+                            <button 
+                                wire:click="deleteColumn({{ $column->id }})"
+                                wire:confirm="Are you sure you want to delete this column and all its tasks?"
+                                class="text-gray-400 hover:text-red-400 p-1.5 rounded-lg transition-all duration-200 hover:bg-red-400/10"
+                                title="Delete column"
+                            >
+                                <i class="fas fa-trash text-sm"></i>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Task List -->
-                    <div class="px-4 py-3 space-y-3 min-h-[120px] flex-1 task-list" data-column-id="{{ $column->id }}">
-                        @forelse($column->tasks->sortBy('position') as $task)
+                    {{-- Task List --}}
+                    <div class="px-3 py-3 space-y-3 flex-1 overflow-y-auto max-h-[calc(100vh-16rem)] task-list scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800"
+                         data-column-id="{{ $column->id }}" 
+                         id="column-{{ $column->id }}">
+
+                        @forelse ($column->tasks->sortBy('position') as $task)
                             @php
-                                $priorityColor = match($task->priority ?? 'secondary') {
+                                $priorityColors = [
                                     'primary' => 'bg-blue-500',
-                                    'important' => 'bg-yellow-400',
+                                    'important' => 'bg-red-500',
                                     'secondary' => 'bg-gray-500',
-                                    default => 'bg-gray-500',
-                                };
+                                    'optional' => 'bg-yellow-500',
+                                ];
+                                $priorityColor = $priorityColors[$task->priority] ?? 'bg-gray-500';
                             @endphp
-                            <div class="task-card bg-gray-900 border border-gray-700 rounded-xl p-3 transition hover:border-gray-600 flex items-center gap-3" data-task-id="{{ $task->id }}">
-                                <!-- Drag Handle -->
-                                <div class="drag-handle w-6 h-6 flex-shrink-0 flex items-center justify-center text-gray-400 cursor-grab hover:text-gray-200">
-                                    <i class="fas fa-grip-vertical text-base"></i>
+
+                            {{-- Task Card --}}
+                            <div class="task-card group bg-gray-900 border border-gray-700 rounded-lg p-4 transition-all duration-200 hover:border-gray-600 hover:shadow-lg hover:translate-y-[-2px] relative sortable-item"
+                                 data-task-id="{{ $task->id }}">
+
+                                {{-- Priority Badge & Drag Handle --}}
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full {{ $priorityColor }}"></span>
+                                        <select 
+                                            wire:change="updateTaskPriority({{ $task->id }}, $event.target.value)"
+                                            class="bg-gray-800 text-white text-xs rounded-md px-2 py-1 border border-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors duration-200"
+                                        >
+                                            <option value="primary" @selected($task->priority == 'primary')>Primary</option>
+                                            <option value="important" @selected($task->priority == 'important')>Important</option>
+                                            <option value="secondary" @selected($task->priority == 'secondary')>Secondary</option>
+                                            <option value="optional" @selected($task->priority == 'optional')>Optional</option>
+                                        </select>
+                                    </div>
+
+                                    {{-- Drag Handle --}}
+                                    <div class="drag-handle text-gray-500 hover:text-gray-300 cursor-move transition-colors duration-200 p-1"
+                                         title="Drag to move">
+                                        <i class="fas fa-grip-vertical"></i>
+                                    </div>
                                 </div>
 
-                                <!-- Priority Indicator -->
-                                <div class="flex-shrink-0 w-3 h-3 rounded-full {{ $priorityColor }}"></div>
+                                {{-- Task Content --}}
+                                <div class="space-y-2">
+                                    {{-- Task Title / Inline Edit --}}
+                                    <div class="min-h-[2rem]">
+                                        @if (isset($editingTaskId) && $editingTaskId === $task->id)
+                                            <input 
+                                                type="text" 
+                                                wire:model.defer="editingTaskTitle"
+                                                wire:keydown.enter="saveTaskTitle({{ $task->id }})"
+                                                wire:blur="saveTaskTitle({{ $task->id }})"
+                                                class="w-full bg-gray-800 border border-gray-600 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                autofocus 
+                                            />
+                                        @else
+                                            <p class="font-medium text-gray-100 leading-relaxed cursor-pointer hover:text-blue-400 transition-colors duration-200 line-clamp-3"
+                                               wire:click="startEditingTask({{ $task->id }})"
+                                               title="Click to edit">
+                                                {{ $task->title }}
+                                            </p>
+                                        @endif
+                                    </div>
 
-                                <!-- Task Info -->
-                                <p class="font-medium text-gray-100 flex-1">{{ $task->title }}</p>
-
-                                <!-- Actions -->
-                                <div class="flex items-center space-x-2">
-                                    <button wire:click="$emit('deleteTask', {{ $task->id }})" class="text-red-500 hover:text-red-400" title="Delete Task">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    {{-- Task Metadata --}}
+                                    @if($task->description || $task->due_date)
+                                        <div class="flex items-center gap-3 text-xs text-gray-400">
+                                            @if($task->description)
+                                                <span class="flex items-center gap-1">
+                                                    <i class="fas fa-file-alt"></i>
+                                                    <span>{{ $task->description }}</span>
+                                                </span>
+                                            @endif
+                                            @if($task->due_date)
+                                                <span class="flex items-center gap-1 {{ $task->due_date->isPast() ? 'text-red-400' : '' }}">
+                                                    <i class="fas fa-clock"></i>
+                                                    <span>{{ $task->due_date->format('M j') }}</span>
+                                                </span>
+                                            @endif
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         @empty
-                            <div class="text-gray-500 text-sm text-center py-8">
-                                <i class="fas fa-inbox text-2xl mb-2 block"></i>
-                                <p>Belum ada task</p>
+                            {{-- Empty State --}}
+                            <div class="text-center py-8 text-gray-500">
+                                <div class="w-12 h-12 mx-auto mb-3 bg-gray-800 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-inbox text-xl"></i>
+                                </div>
+                                <p class="text-sm font-medium">No tasks yet</p>
+                                <p class="text-xs mt-1">Add your first task below</p>
                             </div>
                         @endforelse
                     </div>
 
-                    <!-- Footer: Tambah Task -->
-                    <button 
-                        wire:click="$dispatchTo('add-task', 'open-add-task-modal', { columnId: {{ $column->id }}, columnName: '{{ $column->name }}' })"
-                        class="w-full bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white py-2 rounded-lg transition flex items-center justify-center">
-                        <i class="fas fa-plus mr-2"></i> Tambah Task
-                    </button>
-
+                 
                 </div>
             </div>
         @endforeach
     </div>
-
-    <!-- Livewire AddTask Modal -->
-    <livewire:add-task :board-id="$board->id" wire:key="add-task-modal" />
 </div>
 
-@push('scripts')
-<script>
-(function(){
-    'use strict';
-    let sortableInstances = [];
 
-    function initializeSortable() {
-        const lists = document.querySelectorAll('.task-list');
-        if (!lists.length || typeof Sortable === 'undefined') return;
-
-        lists.forEach(el => {
-            const columnId = el.dataset.columnId;
-            if (!columnId) return;
-
-            if (el.sortableInstance) el.sortableInstance.destroy();
-
-            el.sortableInstance = Sortable.create(el, {
-                group: 'kanban-tasks',
-                handle: '.drag-handle',
-                animation: 150,
-                ghostClass: 'sortable-ghost',
-                chosenClass: 'sortable-chosen',
-                dragClass: 'sortable-drag',
-                onEnd(evt) {
-                    const taskId = parseInt(evt.item.dataset.taskId);
-                    const newColumnId = parseInt(evt.to.dataset.columnId);
-                    const newPosition = evt.newIndex;
-
-                    const component = window.Livewire.find(
-                        document.querySelector('[wire\\:id]')?.getAttribute('wire:id')
-                    );
-                    if (component) {
-                        component.call('updateTaskPosition', taskId, newColumnId, newPosition)
-                            .catch(() => {
-                                evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex]);
-                            });
-                    }
-                }
-            });
-            sortableInstances.push(el.sortableInstance);
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', initializeSortable);
-    document.addEventListener('livewire:navigated', () => {
-        document.querySelectorAll('.task-list').forEach(el => delete el.sortableInstance);
-        sortableInstances = [];
-        setTimeout(initializeSortable, 150);
-    });
-})();
-</script>
-@endpush

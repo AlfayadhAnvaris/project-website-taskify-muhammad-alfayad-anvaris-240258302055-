@@ -52,6 +52,14 @@
                         <span class="font-medium">Laporan</span>
                     </a>
                 </li>
+                {{-- Teams --}}
+                <li>
+                    <a href="{{ route('admin.teams') }}"
+                        class="flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 text-gray-300 hover:bg-gray-700 hover:text-white">
+                        <i class="fas fa-chart-bar w-5 text-center"></i>
+                        <span class="font-medium">Team Management</span>
+                    </a>
+                </li>
 
             </ul>
         </div>

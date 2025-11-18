@@ -66,6 +66,13 @@ class BoardsIndex extends Component
     ]);
     }
 
+    public function show(Board $board)
+{
+    $this->authorize('view', $board); // jika pakai policy
+    return view('user.boards.show', compact('board'));
+}
+
+
     public function render()
     {
         return view('livewire.boards-index', [

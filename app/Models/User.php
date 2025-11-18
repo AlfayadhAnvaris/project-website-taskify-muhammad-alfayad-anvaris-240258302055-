@@ -65,4 +65,18 @@ public function tasks() {
     return $this->hasManyThrough(Task::class, Board::class);
 }
 
+        public function teams()
+    {
+        return $this->belongsToMany(Team::class)
+                    ->withPivot('is_admin', 'joined_at', 'status')
+                    ->withTimestamps();
+    }
+
+    public function adminTeams()
+    {
+        return $this->teams()->wherePivot('is_admin', true);
+    }
+
+    
+
 }

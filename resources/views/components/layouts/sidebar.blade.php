@@ -1,6 +1,16 @@
 <aside id="sidebarUser"
-    class="sidebar bg-gray-800 border-r border-gray-700 fixed left-0 top-16 h-[calc(100vh-4rem)] z-20 
-    overflow-y-auto transform transition-transform -translate-x-full md:translate-x-0">
+    x-show="$store.sidebar.open"
+    @click.outside="$store.sidebar.open = false"
+    x-transition:enter="transition ease-out duration-200"
+    x-transition:enter-start="-translate-x-full opacity-0"
+    x-transition:enter-end="translate-x-0 opacity-100"
+    x-transition:leave="transition ease-in duration-150"
+    x-transition:leave-start="translate-x-0 opacity-100"
+    x-transition:leave-end="-translate-x-full opacity-0"
+    class="sidebar bg-gray-800 border-r border-gray-700 fixed left-0 top-16
+        h-[calc(100vh-4rem)] z-20 overflow-y-auto transform md:translate-x-0 md:block
+        transition-transform">
+
     <div class="p-4 flex flex-col h-full">
 
         <!-- Navigation Menu -->
@@ -46,7 +56,7 @@
 
                 {{-- Tim --}}
                 <li>
-                    <a href="#"
+                    <a href="{{ route('user.teams') }}"
                         class="flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 text-gray-300 hover:bg-gray-700 hover:text-white">
                         <i class="fas fa-users w-5 text-center"></i>
                         <span class="font-medium">Tim</span>
@@ -56,33 +66,6 @@
             </ul>
         </div>
 
-        <!-- Projects Section -->
-        <div class="mb-8">
-            <div class="flex items-center justify-between mb-4 px-2">
-                <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Proyek</h2>
-                <button class="text-gray-400 hover:text-white transition-colors duration-200 p-1 rounded">
-                    <i class="fas fa-plus text-sm"></i>
-                </button>
-            </div>
-            <ul class="space-y-2">
-                <li>
-                    <a href="#"
-                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-gray-300 hover:bg-gray-700 hover:text-white">
-                        <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <span class="text-sm font-medium">Web Development</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#"
-                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-gray-300 hover:bg-gray-700 hover:text-white">
-                        <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span class="text-sm font-medium">Mobile App</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
-
-      
 
     </div>
 </aside>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\TeamManagement;
 use App\Livewire\AdminBoardsIndex;
 use App\Livewire\AdminDashboard;
 use App\Livewire\AdminLogsIndex;
@@ -41,6 +42,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         ->name('user.')
         ->group(function () {
 
+
             Route::get('/dashboard', \App\Livewire\UserDashboard::class)->name('dashboard');
             Route::get('/boards', \App\Livewire\UserBoardsIndex::class)->name('boards.index');
             Route::get('/boards/{boardId}', \App\Livewire\UserBoardView::class)->name('board.view');
@@ -48,6 +50,13 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
             // Reports
             Route::get('/reports', \App\Livewire\UserReportsIndex::class)->name('reports.index');
             Route::get('/reports/create', \App\Livewire\UserReportsCreate::class)->name('reports.create');
+
+            //Team Management
+            Route::get('/user/teams', \App\Livewire\UserTeams::class )->name('teams');
+
+            //Profile
+             Route::get('/profile', \App\Livewire\ProfilePage::class)->name('profile');
+
         });
 
     /*
@@ -56,27 +65,31 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     |--------------------------------------------------------------------------
     */
     Route::middleware(['role:admin'])
-        ->prefix('admin')
-        ->name('admin.')
-        ->group(function () {
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
 
-            // Dashboard
-            Route::get('/dashboard', AdminDashboard::class)->name('dashboard');
+        // Dashboard
+        Route::get('/dashboard', AdminDashboard::class)->name('dashboard');
 
-            // Users
-            Route::get('/users', AdminUsersIndex::class)->name('users');
-            Route::get('/users/{user}', AdminUsersShow::class)->name('users.show');
-            Route::get('/users/{user}/edit', AdminUsersEdit::class)->name('users.edit');
+        // Users
+        Route::get('/users', AdminUsersIndex::class)->name('users');
+        Route::get('/users/{user}', AdminUsersShow::class)->name('users.show');
+        Route::get('/users/{user}/edit', AdminUsersEdit::class)->name('users.edit');
 
-            // Boards
-            Route::get('/boards', AdminBoardsIndex::class)->name('boards');
+        // Boards
+        Route::get('/boards', AdminBoardsIndex::class)->name('boards');
 
-            // Reports
-            Route::get('/reports', AdminReportsIndex::class)->name('reports.index');
-            Route::get('/reports/{report}', AdminReportsShow::class)->name('reports.show');
+        // Reports
+        Route::get('/reports', AdminReportsIndex::class)->name('reports.index');
+        Route::get('/reports/{report}', AdminReportsShow::class)->name('reports.show');
 
-            // Activity Logs
-            Route::get('/logs', AdminLogsIndex::class)->name('logs.index');
-            Route::get('/logs/{log}', AdminLogsShow::class)->name('logs.show');
-        });
+        // Activity Logs
+        Route::get('/logs', AdminLogsIndex::class)->name('logs.index');
+        Route::get('/logs/{log}', AdminLogsShow::class)->name('logs.show');
+
+        // Team Management
+        Route::get('/teams', TeamManagement::class)->name('teams'); 
+    });
+
 });

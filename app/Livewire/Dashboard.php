@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Board;
 use App\Models\Column;
 use App\Models\Task;
+use Illuminate\Support\Facades\Log;
 
 class Dashboard extends Component
 {
@@ -15,6 +16,7 @@ class Dashboard extends Component
         'taskMoved' => '$refresh',
         'taskUpdated' => '$refresh',
         'taskDeleted' => '$refresh',
+        
     ];
 
     public $board;
@@ -63,5 +65,49 @@ public function mount($boardId = null)
 
             
         ]);
+    }
+
+     public function updateTaskPosition($taskId = null, $to = null, $position = null, $from = null)
+    {
+        if (!$taskId || !$to || $position === null) {
+            Log::warning("updateTaskPosition dipanggil tanpa parameter lengkap.");
+            return;
+        }
+
+        try {
+            $task = Task::findOrFail($taskId);
+            $oldColumnId = $task->column_id;
+            $newColumnId = $to;
+
+            Log::info("📦 Moving task {$task->id} from {$oldColumnId} to {$newColumnId} at position {$position}");
+
+            // Update posisi & kolom
+            $task->update([
+                'column_id' => $newColumnId,
+                'position' => $position,
+            ]);
+
+            // Reorder task di kolom lama & baru
+            $this->reorderTasksInColumn($newColumnId);
+            if ($oldColumnId !== $newColumnId) {
+                $this->reorderTasksInColumn($oldColumnId);
+            }
+
+            // Optional: update priority sesuai kebutuhan (misal berdasarkan kolom atau logic lain)
+            // $task->priority = ...;
+            // $task->save();
+
+            $this->dispatch('taskMoved', [
+                'taskId' => $task->id,
+                'from' => $oldColumnId,
+                'to' => $newColumnId,
+            ]);
+        } catch (\Exception $e) {
+            Log::error("❌ Error updating task position: " . $e->getMessage());
+            $this->dispatch('toast', [
+                'type' => 'error',
+                'message' => 'Gagal memindahkan task.',
+            ]);
+        }
     }
 }

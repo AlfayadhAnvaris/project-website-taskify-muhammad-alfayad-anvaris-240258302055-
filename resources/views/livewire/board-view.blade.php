@@ -126,12 +126,12 @@
                                     </div>
 
                                     {{-- Task Metadata --}}
-                                    @if($task->descriptionrep || $task->due_date)
+                                    @if($task->description || $task->due_date)
                                         <div class="flex items-center gap-3 text-xs text-gray-400">
                                             @if($task->description)
                                                 <span class="flex items-center gap-1">
                                                     <i class="fas fa-file-alt"></i>
-                                                    <span>Has description</span>
+                                                    <span>{{ $task->description }}</span>
                                                 </span>
                                             @endif
                                             @if($task->due_date)
@@ -146,10 +146,6 @@
 
                                 {{-- Actions --}}
                                 <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-700">
-                                    <div class="flex items-center gap-1">
-                                        {{-- Assignee avatar bisa ditambahkan di sini --}}
-                                    </div>
-                                    
                                     <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                         <button
                                             wire:click="$dispatchTo('edit-task', 'open-edit-task-modal', { taskId: {{ $task->id }} })"
@@ -246,7 +242,6 @@
 @endpush
 
 @push('scripts')
-<!-- Include Sortable.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 
 <script>
@@ -254,7 +249,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeKanbanDragDrop();
 });
 
-// Reinitialize when Livewire updates
 document.addEventListener('livewire:load', function() {
     initializeKanbanDragDrop();
 });
@@ -264,7 +258,6 @@ document.addEventListener('livewire:update', function() {
 });
 
 function initializeKanbanDragDrop() {
-    // Clean up existing instances
     if (window.kanbanSortables) {
         window.kanbanSortables.forEach(instance => {
             if (instance && typeof instance.destroy === 'function') {
@@ -278,7 +271,6 @@ function initializeKanbanDragDrop() {
     const taskLists = document.querySelectorAll('.task-list');
     
     if (taskLists.length === 0 || typeof Sortable === 'undefined') {
-        console.warn('Sortable.js not loaded or no task lists found');
         return;
     }
 
@@ -316,11 +308,9 @@ function initializeKanbanDragDrop() {
                 const newPosition = evt.newIndex;
                 
                 if (!taskId || !fromColumnId || !toColumnId) {
-                    console.error('Missing data attributes for drag and drop');
                     return;
                 }
 
-                // Get Livewire component
                 const livewireComponent = getLivewireComponent();
                 
                 if (livewireComponent) {
@@ -330,19 +320,8 @@ function initializeKanbanDragDrop() {
                         parseInt(newPosition)
                     ).catch(error => {
                         console.error('Error updating task position:', error);
-                        // Optionally revert the drag
-                        evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex]);
                     });
-                } else {
-                    console.error('Livewire component not found');
-                    // Revert if no component found
-                    evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex]);
                 }
-            },
-            
-            onAdd: function(evt) {
-                // This fires when an item is moved between lists
-                console.log('Item moved between columns');
             }
         });
         
@@ -351,14 +330,12 @@ function initializeKanbanDragDrop() {
 }
 
 function getLivewireComponent() {
-    // Try multiple ways to find the Livewire component
     const wireElement = document.querySelector('[wire\\:id]');
     if (wireElement) {
         const wireId = wireElement.getAttribute('wire:id');
         return window.Livewire.find(wireId);
     }
     
-    // Alternative method
     const livewireComponents = Object.values(window.Livewire.components.componentsById);
     if (livewireComponents.length > 0) {
         return livewireComponents[0];
@@ -367,7 +344,6 @@ function getLivewireComponent() {
     return null;
 }
 
-// Handle page navigation
 document.addEventListener('livewire:navigated', function() {
     setTimeout(initializeKanbanDragDrop, 200);
 });

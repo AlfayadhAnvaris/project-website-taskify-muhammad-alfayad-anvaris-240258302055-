@@ -13,32 +13,47 @@ class BoardView extends Component
     public $columns;
 
     protected $listeners = [
-        'taskMoved' => 'updateTaskPosition',
         'refreshBoard' => 'loadColumns',
+        'taskMoved' => 'updateTaskPosition',
         'columnAdded' => 'refreshColumns',
         'deleteTask' => 'deleteTask',
         'deleteColumn' => 'deleteColumn',
         'markAsDone' => 'markAsDone',
-        'taskUpdated' => '$refresh', 
-
-
-
+        'taskUpdated' => '$refresh',
     ];
+
 
     public function mount($boardId = null)
     {
+
+        $user = auth()->user();
+        $boards = Board::where(function ($q) use ($user) {
+            $q->where('user_id', $user->id)
+                ->orWhereHas('team.users', fn($q2) => $q2->where('users.id', $user->id))
+                ->orWhereHas('team', fn($q3) => $q3->where('owner_id', $user->id));
+        })->get();
+
         $this->board = Board::with('columns.tasks')->find($boardId);
 
+        if ($boardId) {
+            $this->board = Board::with('columns.tasks')->find($boardId);
+        }
+
         if (!$this->board) {
-            $this->board = Board::with('columns.tasks')->first();
+            $this->board = Board::with('columns.tasks')->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                    ->orWhereHas('team.users', fn($q2) => $q2->where('users.id', $user->id))
+                    ->orWhereHas('team', fn($q3) => $q3->where('owner_id', $user->id));
+            })->first();
         }
 
         if (!$this->board) {
             $this->board = Board::create([
                 'name' => 'Default Project Board',
-                'user_id' => auth()->id() ?? 1,
+                'user_id' => $user->id,
             ]);
         }
+
 
         $this->board->load('columns.tasks');
         $this->loadColumns();
@@ -63,49 +78,48 @@ class BoardView extends Component
     }
 
     public function updateTaskPosition($taskId = null, $to = null, $position = null, $from = null)
-{
-    if (!$taskId || !$to || $position === null) {
-        Log::warning("updateTaskPosition dipanggil tanpa parameter lengkap.");
-        return;
-    }
-
-    try {
-        $task = Task::findOrFail($taskId);
-        $oldColumnId = $task->column_id;
-        $newColumnId = $to;
-
-        Log::info("📦 Moving task {$task->id} from {$oldColumnId} to {$newColumnId} at position {$position}");
-
-        // Update posisi & kolom
-        $task->update([
-            'column_id' => $newColumnId,
-            'position' => $position,
-        ]);
-
-        // Reorder task di kolom lama & baru
-        $this->reorderTasksInColumn($newColumnId);
-        if ($oldColumnId !== $newColumnId) {
-            $this->reorderTasksInColumn($oldColumnId);
+    {
+        if (!$taskId || !$to || $position === null) {
+            Log::warning("updateTaskPosition dipanggil tanpa parameter lengkap.");
+            return;
         }
 
-        // Optional: update priority sesuai kebutuhan (misal berdasarkan kolom atau logic lain)
-        // $task->priority = ...;
-        // $task->save();
+        try {
+            $task = Task::findOrFail($taskId);
+            $oldColumnId = $task->column_id;
+            $newColumnId = $to;
 
-        $this->dispatch('taskMoved', [
-            'taskId' => $task->id,
-            'from' => $oldColumnId, 
-            'to' => $newColumnId,
-        ]);
+            Log::info("📦 Moving task {$task->id} from {$oldColumnId} to {$newColumnId} at position {$position}");
 
-    } catch (\Exception $e) {
-        Log::error("❌ Error updating task position: " . $e->getMessage());
-        $this->dispatch('toast', [
-            'type' => 'error',
-            'message' => 'Gagal memindahkan task.',
-        ]);
+            // Update posisi & kolom
+            $task->update([
+                'column_id' => $newColumnId,
+                'position' => $position,
+            ]);
+
+            // Reorder task di kolom lama & baru
+            $this->reorderTasksInColumn($newColumnId);
+            if ($oldColumnId !== $newColumnId) {
+                $this->reorderTasksInColumn($oldColumnId);
+            }
+
+            // Optional: update priority sesuai kebutuhan (misal berdasarkan kolom atau logic lain)
+            // $task->priority = ...;
+            // $task->save();
+
+            $this->dispatch('taskMoved', [
+                'taskId' => $task->id,
+                'from' => $oldColumnId,
+                'to' => $newColumnId,
+            ]);
+        } catch (\Exception $e) {
+            Log::error("❌ Error updating task position: " . $e->getMessage());
+            $this->dispatch('toast', [
+                'type' => 'error',
+                'message' => 'Gagal memindahkan task.',
+            ]);
+        }
     }
-}
 
     public function markAsDone($taskId)
     {
@@ -160,44 +174,44 @@ class BoardView extends Component
     }
 
     public function updateTaskPriority($taskId, $priority)
-{
-    $task = Task::find($taskId);
-    if ($task) {
-        $task->priority = $priority;
-        $task->save();
+    {
+        $task = Task::find($taskId);
+        if ($task) {
+            $task->priority = $priority;
+            $task->save();
 
-        $this->loadColumns(); // refresh board
+            $this->loadColumns(); // refresh board
 
-        $this->dispatch('toast', [
-            'type' => 'success',
-            'message' => 'Priority task diperbarui!',
-        ]);
+            $this->dispatch('toast', [
+                'type' => 'success',
+                'message' => 'Priority task diperbarui!',
+            ]);
+        }
     }
-}
-public $editingTaskId = null;
-public $editingTaskTitle = '';
+    public $editingTaskId = null;
+    public $editingTaskTitle = '';
 
 
-public function startEditingTask($taskId)
-{
-    $task = Task::find($taskId);
-    if ($task) {
-        $this->editingTaskId = $taskId;
-        $this->editingTaskTitle = $task->title;
-    }
-}
-
-public function saveTaskTitle($taskId)
-{
-    $task = Task::find($taskId);
-    if ($task && $this->editingTaskTitle !== '') {
-        $task->update(['title' => $this->editingTaskTitle]);
-        $this->dispatch('toast', message: 'Task updated successfully!', type: 'success');
+    public function startEditingTask($taskId)
+    {
+        $task = Task::find($taskId);
+        if ($task) {
+            $this->editingTaskId = $taskId;
+            $this->editingTaskTitle = $task->title;
+        }
     }
 
-    $this->editingTaskId = null;
-    $this->editingTaskTitle = '';
-}
+    public function saveTaskTitle($taskId)
+    {
+        $task = Task::find($taskId);
+        if ($task && $this->editingTaskTitle !== '') {
+            $task->update(['title' => $this->editingTaskTitle]);
+            $this->dispatch('toast', message: 'Task updated successfully!', type: 'success');
+        }
+
+        $this->editingTaskId = null;
+        $this->editingTaskTitle = '';
+    }
 
 
 

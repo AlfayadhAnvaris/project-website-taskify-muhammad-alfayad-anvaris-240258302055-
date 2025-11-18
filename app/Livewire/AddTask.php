@@ -12,10 +12,10 @@ use Illuminate\Support\Facades\Log;
 class AddTask extends Component
 {
     public $boardId;
-  public $showModal = false;
+    public $showModal = false;
     public $selectedColumnId;
     public $selectedColumnName = '';
-    
+
     public $newTaskTitle = '';
     public $newTaskDescription = '';
 
@@ -32,28 +32,28 @@ class AddTask extends Component
 
     protected $listeners = ['open-add-task-modal' => 'openModal'];
 
- public function openModal($columnId, $columnName)
-{
-    $this->resetForm();
-    $this->selectedColumnId = $columnId;
-    $this->selectedColumnName = $columnName;
-    $this->showModal = true;
-}
+    public function openModal($columnId, $columnName)
+    {
+        $this->resetForm();
+        $this->selectedColumnId = $columnId;
+        $this->selectedColumnName = $columnName;
+        $this->showModal = true;
+    }
 
-public function closeModal()
-{
-    $this->showModal = false;
-    $this->resetForm();
-}
+    public function closeModal()
+    {
+        $this->showModal = false;
+        $this->resetForm();
+    }
 
-private function resetForm()
-{
-    $this->newTaskTitle = '';
-    $this->newTaskDescription = '';
-    $this->resetErrorBag();
-}
+    private function resetForm()
+    {
+        $this->newTaskTitle = '';
+        $this->newTaskDescription = '';
+        $this->resetErrorBag();
+    }
 
-public function addTask()
+    public function addTask()
 {
     $this->validate();
     $maxPosition = Task::where('column_id', $this->selectedColumnId)->max('position') ?? -1;
@@ -66,37 +66,40 @@ public function addTask()
         'status' => 'pending',
     ]);
 
-     ActivityLog::create([
+    ActivityLog::create([
         'user_id' => Auth::id(),
         'action' => 'Menambah Task',
         'description' => "User " . Auth::user()->name . " menambahkan task baru: {$task->title}"
     ]);
 
     $this->closeModal();
-    $this->dispatch('refreshBoard')->to('board-view');
+
+    $this->dispatch('refreshBoard');
+
     $this->dispatch('task-added', message: 'Task berhasil ditambahkan!');
 }
 
-public function deleteTask($taskId)
-{
-    $task = Task::find($taskId);
-    if ($task) {
-        $task->delete();
 
-        $this->dispatchBrowserEvent('toast', [
-            'type' => 'success',
-            'message' => 'Task berhasil dihapus!',
+    public function deleteTask($taskId)
+    {
+        $task = Task::find($taskId);
+        if ($task) {
+            $task->delete();
+
+            $this->dispatchBrowserEvent('toast', [
+                'type' => 'success',
+                'message' => 'Task berhasil dihapus!',
+            ]);
+
+            $this->dispatch('refreshBoard');
+        }
+
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'action' => 'Menghapus Task',
+            'description' => "User " . Auth::user()->name . " menghapus task: {$task->title}"
         ]);
-
-        $this->dispatch('refreshBoard')->to('board-view');
     }
-
-     ActivityLog::create([
-        'user_id' => Auth::id(),
-        'action' => 'Menghapus Task',
-        'description' => "User " . Auth::user()->name . " menghapus task: {$task->title}"
-    ]);
-}
 
 
     public function render()
