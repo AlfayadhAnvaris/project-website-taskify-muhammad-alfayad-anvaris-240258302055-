@@ -27,7 +27,6 @@
             <i class="fas fa-list text-gray-400"></i>
             Team Saya
         </h3>
-
         <div class="grid gap-3">
             @foreach ($teams as $team)
                 <div class="p-4 bg-gray-800 rounded-xl border border-gray-700 hover:border-gray-600 hover:shadow-lg transition-all duration-200 cursor-pointer group flex justify-between items-center"
@@ -130,6 +129,46 @@
                     @endforeach
                 </div>
             </div>
+
+            {{-- Boards Section --}}
+            <div class="mt-6">
+                <h4 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-table-columns text-blue-400"></i>
+                    Boards {{ $selectedTeam->name }}
+                </h4>
+
+                <!-- Create Board -->
+                <div class="flex gap-3 mb-4">
+                    <input type="text" wire:model.defer="boardName" placeholder="Nama board baru..."
+                        class="flex-1 px-4 py-2 rounded-lg bg-gray-900 border border-gray-600 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                    <button wire:click="createBoard"
+                        class="px-4 py-2 bg-blue-600 rounded-lg text-white font-semibold hover:bg-blue-700 transition-all duration-200">
+                        Buat Board
+                    </button>
+                </div>
+
+                <!-- Boards List -->
+                <div class="space-y-3">
+                    @forelse ($teamBoards as $board)
+                        <div
+                            class="flex justify-between items-center bg-gray-900 p-4 rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-200">
+                            <div>
+                                <p class="font-semibold text-white">{{ $board->name }}</p>
+                                <p class="text-gray-400 text-sm">{{ optional($board->tasks)->count() ?? 0 }} task</p>
+                            </div>
+                            <a href="{{ route('admin.teams.boards.show', ['team' => $selectedTeam->id, 'board' => $board->id]) }}"
+                                class="px-3 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 text-white">
+                                Buka Board
+                            </a>
+
+
+                        </div>
+                    @empty
+                        <p class="text-gray-400 italic">Belum ada board untuk tim ini.</p>
+                    @endforelse
+                </div>
+            </div>
+
         </div>
     @endif
 </div>

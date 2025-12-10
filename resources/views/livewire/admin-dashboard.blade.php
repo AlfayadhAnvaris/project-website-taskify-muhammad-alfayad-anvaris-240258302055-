@@ -47,22 +47,39 @@
         </div>
 
     </div>
+<!-- Chart -->
+<div class="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6 mb-8">
+    <h2 class="text-xl font-semibold mb-4">📅 Grafik Task Dibuat per Hari</h2>
 
-    <!-- Chart -->
-    <div class="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6 mb-8">
-        <h2 class="text-xl font-semibold mb-4">📈 Grafik Task Dibuat per Bulan</h2>
-        <canvas id="taskChart" height="100"></canvas>
+    @if(env('APP_DEBUG'))
+        <div class="mb-4 p-4 bg-gray-800 rounded-lg">
+            <h3 class="text-lg font-semibold mb-2">📊 Debug Chart Data</h3>
+            <p class="text-sm text-gray-400">Labels: {{ json_encode($taskByDay->keys()) }}</p>
+            <p class="text-sm text-gray-400">Data: {{ json_encode($taskByDay->values()) }}</p>
+            <p class="text-sm text-gray-400">Total Data Points: {{ $taskByDay->count() }}</p>
+        </div>
+    @endif
+
+    <div class="h-80">
+        <canvas id="taskChart"></canvas>
     </div>
+
+    @if($taskByDay->count() === 0)
+        <div class="text-center py-8">
+            <i class="fas fa-chart-line text-4xl text-gray-500 mb-3"></i>
+            <p class="text-gray-400">Tidak ada data task untuk ditampilkan</p>
+        </div>
+    @endif
+</div>
+
 
     <!-- Kanban (Mini Preview) -->
     <h2 class="text-xl font-semibold mb-4">🗂 Kanban Board (Preview)</h2>
 
     <div class="flex gap-4 overflow-x-auto pb-6 kanban-board">
-
         @foreach($columns as $column)
         <div class="flex-shrink-0 w-72">
             <div class="bg-gray-800/60 border border-gray-700 rounded-xl p-4">
-
                 <div class="mb-3 flex justify-between items-center">
                     <h3 class="font-semibold">{{ $column->name }}</h3>
                     <span class="text-xs bg-gray-700 px-2 py-1 rounded">{{ $column->tasks->count() }} Tasks</span>
@@ -72,11 +89,9 @@
                     @forelse($column->tasks->sortBy('position') as $task)
                     <div class="bg-gray-900 border border-gray-700 rounded-xl p-3">
                         <p class="font-semibold">{{ $task->title }}</p>
-
                         <p class="text-xs text-gray-400 mt-1">
                             Dibuat oleh: <span class="text-blue-400">{{ $task->user->name ?? 'Unknown' }}</span>
                         </p>
-
                         <span class="block mt-2 text-xs px-2 py-1 rounded
                             @if($task->priority === 'important') bg-yellow-500/20 text-yellow-300
                             @elseif($task->priority === 'primary') bg-blue-500/20 text-blue-300
@@ -85,93 +100,73 @@
                         </span>
                     </div>
                     @empty
-                        <p class="text-gray-500 text-sm italic">Tidak ada task</p>
+                    <p class="text-gray-500 text-sm italic">Tidak ada task</p>
                     @endforelse
                 </div>
-
             </div>
         </div>
         @endforeach
-
     </div>
-
 </main>
-
-
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script>
-const ctx = document.getElementById('taskChart').getContext('2d');
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('taskChart');
 
-// Gradient line
-const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)'); // biru atas
-gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');   // transparan bawah
+    // Stop kalau tidak ada canvas atau data
+    if (!ctx || {!! $taskByDay->count() !!} === 0) {
+        return;
+    }
 
-const labels = {!! json_encode($taskByMonth->keys()) !!};
-const data = {!! json_encode($taskByMonth->values()) !!};
+    try {
+        const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)');
+        gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
 
-const taskChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: labels,
-        datasets: [{
-            label: 'Task Dibuat',
-            data: data,
-            fill: true,
-            backgroundColor: gradient,
-            borderColor: '#3B82F6', // biru
-            borderWidth: 3,
-            tension: 0.4,
-            pointRadius: 5,
-            pointHoverRadius: 8,
-            pointBackgroundColor: '#3B82F6',
-            pointHoverBackgroundColor: '#2563EB',
-            pointBorderColor: '#fff',
-            pointHoverBorderColor: '#fff'
-        }]
-    },
-    options: {
-        responsive: true,
-        interaction: {
-            mode: 'nearest',
-            intersect: false
-        },
-        plugins: {
-            legend: { display: false },
-            tooltip: {
-                enabled: true,
-                backgroundColor: '#1F2937',
-                titleColor: '#fff',
-                bodyColor: '#fff',
-                cornerRadius: 6,
-                padding: 10,
-                displayColors: true
-            }
-        },
-        scales: {
-            x: {
-                grid: { display: false },
-                ticks: { color: '#9CA3AF' }
+        const labels = {!! json_encode(
+            $taskByDay->keys()->map(fn($d) => \Carbon\Carbon::parse($d)->format('d M'))
+        ) !!};
+
+        const data = {!! json_encode($taskByDay->values()) !!};
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Task Dibuat',
+                    data: data,
+                    fill: true,
+                    backgroundColor: gradient,
+                    borderColor: '#3B82F6',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#3B82F6',
+                }]
             },
-            y: {
-                beginAtZero: true,
-                grid: {
-                    color: 'rgba(156, 163, 175, 0.2)',
-                    drawBorder: false
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
                 },
-                ticks: { color: '#9CA3AF' }
+                scales: {
+                    x: {
+                        ticks: { color: '#9CA3AF' }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#9CA3AF', precision: 0 }
+                    }
+                }
             }
-        },
-        animation: {
-            duration: 1000,
-            easing: 'easeOutQuart'
-        }
+        });
+    } catch (error) {
+        console.error('Error loading chart:', error);
     }
 });
 </script>
-
 @endpush

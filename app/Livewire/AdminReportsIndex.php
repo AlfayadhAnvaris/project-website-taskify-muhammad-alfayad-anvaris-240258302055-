@@ -14,6 +14,10 @@ class AdminReportsIndex extends Component
     public $pendingReports;
     public $approvedReports;
     public $rejectedReports;
+
+    public $statusFilter = '';
+    public $categoryFilter = '';
+
     public function mount()
     {
         $this->totalReports = Report::count();
@@ -33,22 +37,39 @@ class AdminReportsIndex extends Component
         $this->resetPage();
     }
 
-    public function render()
+    public function updatingStatusFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingCategoryFilter()
+    {
+        $this->resetPage();
+    }
+
+      public function render()
     {
         $reports = Report::with('user')
-            ->where(function ($query) {
-                $query->where('title', 'like', '%'.$this->search.'%')
-                      ->orWhere('category', 'like', '%'.$this->search.'%');
-            })
-            ->latest()
+            ->when($this->search, fn($query) => 
+                $query->where('title', 'like', "%{$this->search}%")
+                      ->orWhereHas('user', fn($q) => $q->where('name', 'like', "%{$this->search}%"))
+            )
+            ->when($this->statusFilter, fn($query) => $query->where('status', $this->statusFilter))
+            ->when($this->categoryFilter, fn($query) => $query->where('category', $this->categoryFilter))
+            ->orderByDesc('created_at')
             ->paginate(10);
 
-        return view('livewire.admin-reports-index', [
-            'reports' => $reports,
-            'totalReports' => $this->totalReports,
-            'pendingReports' => $this->pendingReports,
-            'approvedReports' => $this->approvedReports,
-            'rejectedReports' => $this->rejectedReports,
-        ]);
+        $totalReports = Report::count();
+        $pendingReports = Report::where('status', 'pending')->count();
+        $approvedReports = Report::where('status', 'approved')->count();
+        $rejectedReports = Report::where('status', 'rejected')->count();
+
+        return view('livewire.admin-reports-index', compact(
+            'reports',
+            'totalReports',
+            'pendingReports',
+            'approvedReports',
+            'rejectedReports'
+        ));
     }
 }

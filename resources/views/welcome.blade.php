@@ -437,8 +437,8 @@
     <div class="container nav-container">
         <div class="logo">Progressly</div>
         <div class="nav-auth">
-            <a href="{{ route('login') }}" class="btn-login">🔑 Login</a>
-            <a href="{{ route('register') }}" class="btn-register">🚀 Get Started</a>
+            <a href="{{ route('login') }}" class="btn-login"> Login</a>
+            <a href="{{ route('register') }}" class="btn-register"> Register</a>
         </div>
     </div>
 </nav>
@@ -453,10 +453,7 @@
             
             <div class="hero-actions">
                 <a href="{{ route('register') }}" class="btn btn-primary">
-                    🚀 Start Free Trial
-                </a>
-                <a href="#features" class="btn btn-secondary">
-                    ▶️ Watch Demo
+                     Start Free Trial
                 </a>
             </div>
             

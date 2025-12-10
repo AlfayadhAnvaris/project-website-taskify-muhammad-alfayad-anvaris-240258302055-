@@ -77,6 +77,12 @@ public function tasks() {
         return $this->teams()->wherePivot('is_admin', true);
     }
 
+
+    public function comments()
+{
+    return $this->hasMany(Comment::class);
+}
+
     
 
 }

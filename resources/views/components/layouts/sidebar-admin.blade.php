@@ -27,7 +27,7 @@
                         {{ request()->routeIs('admin.users*')
                             ? 'text-white bg-blue-600 shadow-lg'
                             : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
-                        <i class="fas fa-users w-5 text-center"></i>
+                        <i class="fas fa-user w-5 text-center"></i>
                         <span class="font-medium">Kelola User</span>
                     </a>
                 </li>
@@ -47,7 +47,9 @@
                 {{-- Laporan --}}
                 <li>
                     <a href="{{ route('admin.reports.index') }}"
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 text-gray-300 hover:bg-gray-700 hover:text-white">
+                        class="flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200  {{ request()->routeIs('admin.reports*')
+                            ? 'text-white bg-blue-600 shadow-lg'
+                            : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
                         <i class="fas fa-chart-bar w-5 text-center"></i>
                         <span class="font-medium">Laporan</span>
                     </a>
@@ -55,8 +57,10 @@
                 {{-- Teams --}}
                 <li>
                     <a href="{{ route('admin.teams') }}"
-                        class="flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 text-gray-300 hover:bg-gray-700 hover:text-white">
-                        <i class="fas fa-chart-bar w-5 text-center"></i>
+                        class="flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200  {{ request()->routeIs('admin.teams*')  
+                            ? 'text-white bg-blue-600 shadow-lg'
+                            : 'text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+                       <i class="fas fa-users w-5 text-center"></i
                         <span class="font-medium">Team Management</span>
                     </a>
                 </li>

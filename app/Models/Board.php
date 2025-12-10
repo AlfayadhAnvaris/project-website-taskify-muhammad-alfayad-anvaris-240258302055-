@@ -19,10 +19,16 @@ public function columns()
     return $this->hasMany(Column::class);
 }
 
+public function comments()
+{
+    return $this->hasMany(Comment::class);
+}
+
 public function team()
 {
     return $this->belongsTo(Team::class);
 }
+
 
 public function tasks()
 {

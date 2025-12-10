@@ -52,4 +52,13 @@ class Team extends Model
     return $this->belongsTo(User::class, 'owner_id');
 }
 
+public function isAdmin($userId)
+{
+    return $this->users()
+        ->wherePivot('user_id', $userId)
+        ->wherePivot('is_admin', true)
+        ->exists();
+}
+
+
 }

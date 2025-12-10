@@ -7,6 +7,7 @@ use App\Models\Board;
 use App\Models\Column;
 use App\Models\Task;
 use Livewire\Component;
+use Illuminate\Support\Facades\DB;
 
 class AdminDashboard extends Component
 {
@@ -19,7 +20,7 @@ class AdminDashboard extends Component
     public $topUsers;
     public $columns;
     public $board;
-    public $taskByMonth;
+    public $taskByDay;
 
     public function mount()
     {
@@ -39,9 +40,11 @@ class AdminDashboard extends Component
             ->take(5)
             ->get();
 
-        $this->taskByMonth = Task::selectRaw("COUNT(*) as total, DATE_FORMAT(created_at, '%M') as month")
-            ->groupBy('month')
-            ->pluck('total', 'month');
+        $this->taskByDay = Task::selectRaw('DATE(created_at) as day, COUNT(*) as total')
+    ->groupBy('day')
+    ->orderBy('day', 'ASC')
+    ->pluck('total', 'day');
+
     }
 
     public function render()
